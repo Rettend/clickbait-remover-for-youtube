@@ -1,28 +1,46 @@
+function getChannelName(url) {
+  const match = url.match(/@([^\/]+)/);
+  return match ? match[1] : null;
+}
+
+function isChannelWhitelisted(whitelist, url) {
+  const channelName = getChannelName(url);
+  return whitelist?.includes(channelName);
+}
+
 if (typeof window.styleElement === 'undefined') { // shitty way to detect if script was already injected, todo: find a better way to do this.
     window.styleElement = null;
 
     // <executed_on_content_script_loaded>
-    chrome.storage.sync.get(['video_title_format'], function ({video_title_format}) {
-        // only running something for the css change, as the webRequest listeners should be live now.
-        if (video_title_format !== 'default') {
-            updateCSS(video_title_format);
+    chrome.storage.sync.get(['video_title_format', 'whitelist'], function ({video_title_format, whitelist}) {
+        const url = window.location.href;
+        console.log('URL video', url, whitelist);
+        if (!isChannelWhitelisted(whitelist, url)) {
+            // only running something for the css change, as the webRequest listeners should be live now.
+            if (video_title_format !== 'default') {
+                updateCSS(video_title_format);
+            }
         }
     });
     // </executed_on_content_script_loaded>
 
     chrome.runtime.onMessage.addListener(function (message) {
-        Object.keys(message).forEach(function (change) {
-            switch (change) {
-                case 'preferred_thumbnail_file':
-                    updateThumbnails(
-                        message[change].newValue === undefined ? 'hq1' : message[change].newValue
-                    );
-                    break;
-                case 'video_title_format':
-                    updateCSS(message[change].newValue);
-                    break;
-            }
-        })
+        const url = window.location.href;
+        console.log('URL onMessage', url, message);
+        if (!isChannelWhitelisted(message.whitelist, url)) {
+            Object.keys(message).forEach(function (change) {
+                switch (change) {
+                    case 'preferred_thumbnail_file':
+                        updateThumbnails(
+                            message[change].newValue === undefined ? 'hq1' : message[change].newValue
+                        );
+                        break;
+                    case 'video_title_format':
+                        updateCSS(message[change].newValue);
+                        break;
+                }
+            })
+        }
     });
 
     function updateCSS(option) {
@@ -101,6 +119,8 @@ if (typeof window.styleElement === 'undefined') { // shitty way to detect if scr
     }
 
     function updateThumbnails(newImage) {
+        console.log('newImage', newImage);
+      
         let imgElements = document.getElementsByTagName('img');
 
         for (let i = 0; i < imgElements.length; i++) {

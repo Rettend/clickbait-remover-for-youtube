@@ -9,10 +9,15 @@ chrome.runtime.onInstalled.addListener(function ({reason}) {
     }
 });
 
-chrome.storage.sync.get(['preferred_thumbnail_file'], function (storage) {
-
+chrome.storage.sync.get(['preferred_thumbnail_file', 'video_title_format', 'whitelist'], function (storage) {
     if (storage.preferred_thumbnail_file === undefined) { // shitty fix
         storage.preferred_thumbnail_file = "hq1"
+    }
+    if (storage.video_title_format === undefined) {
+        storage.video_title_format = "capitalize_first_letter"
+    }
+    if (storage.whitelist === undefined) {
+        storage.whitelist = []
     }
 
     setupThumbnailRedirectListeners(storage.preferred_thumbnail_file);
@@ -29,7 +34,11 @@ chrome.storage.sync.get(['preferred_thumbnail_file'], function (storage) {
                     chrome.tabs.sendMessage(tab.id, {
                         'preferred_thumbnail_file': {
                             newValue: storage.preferred_thumbnail_file
-                        }
+                        },
+                        'video_title_format': {
+                            newValue: storage.video_title_format
+                        },
+                        'whitelist': storage.whitelist
                     });
                 }
             )
@@ -42,7 +51,11 @@ chrome.storage.sync.get(['preferred_thumbnail_file'], function (storage) {
 
             chrome.tabs.query({url: '*://www.youtube.com/*'}, function (tabs) {
                 tabs.forEach(function (tab) {
-                    chrome.tabs.sendMessage(tab.id, changes);
+                    chrome.tabs.sendMessage(tab.id, {
+                        'preferred_thumbnail_file': changes.preferred_thumbnail_file,
+                        'video_title_format': changes.video_title_format,
+                        'whitelist': changes.whitelist
+                    });
                 })
             });
         });

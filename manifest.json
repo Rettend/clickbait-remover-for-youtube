@@ -35,8 +35,11 @@
   },
   "permissions": [
     "storage",
-    "declarativeNetRequestWithHostAccess",
-    "scripting"
+    "activeTab",
+    "scripting",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "tabs"
   ],
   "host_permissions": [
     "*://www.youtube.com/*",
