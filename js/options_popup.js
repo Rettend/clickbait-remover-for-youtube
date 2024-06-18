@@ -15,6 +15,23 @@ chrome.storage.sync.get(optionKeys, function (storage) {
     })
 });
 
+document.getElementById('whitelist_channel').addEventListener('click', function() {
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    const url = new URL(tabs[0].url);
+
+    // format: https://www.youtube.com/@channelname/...
+    // match from the first '@' to the first '/' after that:
+    const channelName = url.pathname.match(/@([^\/]+)/)[1];
+
+    chrome.storage.sync.get(['whitelist'], function ({whitelist}) {
+      if (!whitelist.includes(channelName)) {
+        whitelist.push(channelName);
+        chrome.storage.sync.set({whitelist});
+      }
+    });
+  });
+});
+
 const textElements = document.querySelectorAll('[data-localize]');
 textElements.forEach((e) => {
   const ref = e.dataset.localize;

@@ -3,7 +3,8 @@ chrome.runtime.onInstalled.addListener(function ({reason}) {
         // default values
         chrome.storage.sync.set({
             preferred_thumbnail_file: 'hq1',
-            video_title_format: 'capitalize_first_letter'
+            video_title_format: 'capitalize_first_letter',
+            whitelist: []
         })
     }
 });
