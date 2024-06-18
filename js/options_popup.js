@@ -17,13 +17,22 @@ chrome.storage.sync.get(optionKeys, function (storage) {
 
 document.getElementById('whitelist_channel').addEventListener('click', function() {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    if (!tabs[0] || !tabs[0].url || !tabs[0].url.startsWith('http')) {
+      return;
+    }
+    
     const url = new URL(tabs[0].url);
 
     // format: https://www.youtube.com/@channelname/...
     // match from the first '@' to the first '/' after that:
-    const channelName = url.pathname.match(/@([^\/]+)/)[1];
+    const channelName = url.pathname.match(/@([^\/]+)/)?.[1];
+
+    if (!channelName) {
+      return;
+    }
 
     chrome.storage.sync.get(['whitelist'], function ({whitelist}) {
+      console.log('WHITELIST', whitelist);
       if (!whitelist.includes(channelName)) {
         whitelist.push(channelName);
         chrome.storage.sync.set({whitelist});
